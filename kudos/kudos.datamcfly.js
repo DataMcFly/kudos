@@ -70,13 +70,19 @@
 		});
 
 		datamcflyKudos.on('added', function(data){
-			likeCount = likeCount + 1;
-			cb( likeCount );
+			//	make sure this update was only for this document, ignore all others...
+			if( data.value().key == key ){
+				likeCount = likeCount + 1;
+				cb( likeCount );
+			}
 		});
 
 		datamcflyKudos.on('removed', function(data){
-			likeCount = likeCount - 1;
-			cb( likeCount );
+			//	make sure this update was only for this document, ignore all others...
+			if( data.value().key == key ){
+				likeCount = likeCount - 1;
+				cb( likeCount );
+			}
 		});
     };
 
