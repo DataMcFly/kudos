@@ -51,9 +51,10 @@
 //	unique hash based on user id and site url...
 	var hash = new String( uid + '.' + key ).hashCode();
 
+
     var hasVoted = function(){
 		var deferred = $.Deferred();
-		datamcflyKudos.where({"hash": hash}).on('value', function(data){
+		datamcflyKudos.where({ "$and": [ {"key": key }, {"uid": uid } ] }).on('value', function(data){
 			deferred.resolve( data.count() !== null);
 		});
 		return deferred.promise();
@@ -69,7 +70,7 @@
 	};
 	
     var removeKudo = function(){
-		datamcflyKudos.where( {"hash": hash} ).on('value', function(data){
+		datamcflyKudos.where( { "$and": [ {"key": key }, {"uid": uid } ] } ).on('value', function(data){
 			if( data.count() ){
 				data.forEach( function(snapshot){
 					var doc = snapshot.value();
