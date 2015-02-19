@@ -32,12 +32,28 @@
 			return localStorage.getItem("uuid");
 		}
 	}
+
+	String.prototype.hashCode = function(){
+	    if (Array.prototype.reduce){
+	        return this.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0);              
+	    } 
+	    var hash = 0;
+	    if (this.length === 0) return hash;
+	    for (var i = 0; i < this.length; i++) {
+	        var character  = this.charCodeAt(i);
+	        hash  = ((hash<<5)-hash)+character;
+	        hash = hash & hash; // Convert to 32bit integer
+	    }
+	    return hash;
+	}
+	
 	var uid = getAuthData();
+//	unique hash based on user id and site url...
+	var hash = new String( uid + '.' + key ).hashCode();
 
     var hasVoted = function(){
 		var deferred = $.Deferred();
-
-		datamcflyKudos.where({ "$and": [ {"key": key }, {"uid": uid } ] }).limit(1).on('value', function(data){
+		datamcflyKudos.where({"hash": hash}).on('value', function(data){
 			deferred.resolve( data.count() !== null);
 		});
 		return deferred.promise();
@@ -46,13 +62,14 @@
     var addKudo = function(){
 		datamcflyKudos.set({
 			'key' : key,
+			'hash' : hash,
 			'uid' : uid,
 			'likes' : 1
 		});
 	};
 	
     var removeKudo = function(){
-		datamcflyKudos.where({ "$and": [ {"key": key }, {"uid": uid } ] }).on('value', function(data){
+		datamcflyKudos.where( {"hash": hash} ).on('value', function(data){
 			if( data.count() ){
 				data.forEach( function(snapshot){
 					var doc = snapshot.value();
@@ -71,19 +88,17 @@
 		});
 
 		datamcflyKudos.on('added', function(data){
-			//	make sure this update was only for this document, ignore all others...
 			if( data.value().key == key ){
 				likeCount = likeCount + 1;
-				cb( likeCount );
 			}
+			cb( likeCount );
 		});
 
 		datamcflyKudos.on('removed', function(data){
-			//	make sure this update was only for this document, ignore all others...
 			if( data.value().key == key ){
 				likeCount = likeCount - 1;
-				cb( likeCount );
 			}
+			cb( likeCount );
 		});
     };
 
